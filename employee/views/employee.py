@@ -93,6 +93,18 @@ class EmployeeViewSet(viewsets.ModelViewSet):
         if serializer.is_valid():
             self.perform_create(serializer)
             headers = self.get_success_headers(serializer.data)
+            
+            employee_id = serializer.data["employee_id"]
+            emergency_contact = request.data['emergency_contact']
+            
+            for contact in emergency_contact:
+                contact["employee_id"] = employee_id
+                EmergencySerializer = EmployeeEmergencySerializer(data=contact, many=False)
+                if EmergencySerializer.is_valid():
+                    EmergencySerializer.save()
+                else:
+                    print(EmergencySerializer.errors)
+
             return Response({
                 'status': 'success',
                 'data': serializer.data
@@ -117,6 +129,17 @@ class EmployeeViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
+
+        employee_id = serializer.data["employee_id"]
+        emergency_contact = request.data['emergency_contact']
+        
+        for contact in emergency_contact:
+            contact["employee_id"] = employee_id
+            EmergencySerializer = EmployeeEmergencySerializer(data=contact, many=False)
+            if EmergencySerializer.is_valid():
+                EmergencySerializer.save()
+            else:
+                print(EmergencySerializer.errors)
         return Response({
             'status': 'success',
             'data': serializer.data
@@ -135,44 +158,3 @@ class EmployeeViewSet(viewsets.ModelViewSet):
         
         print("listget")
         return Response({'listget'})
-
-class EmployeeEmergencyViewSet(viewsets.ModelViewSet):
-    queryset = EmployeeEmergency.objects.all()
-    serializer_class = EmployeeEmergencySerializer
-    pagination_class = CustomPagination
-    filter_backends = (SearchFilter, OrderingFilter)
-    search_fields = ['emergency_contact_person', 'emergency_contact_number']
-    ordering = ['employee_emergency_id']
-
-    @action(methods=["GET"], detail=False)
-    def get(self, request, *args, **kwargs):
-        
-        employee_id = request.data.get('employee_id')
-        print(employee_id)
-        emergency = EmployeeEmergency.objects.filter(employee_id=employee_id).values()
-        print(emergency.query)
-        return Response({
-            'status': 'success',
-            'data': emergency
-        })
-
-    def update(self, request, *args, **kwargs):
-        partial = kwargs.pop('partial', False)
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        self.perform_update(serializer)
-        return Response({
-            'status': 'success',
-            'data': serializer.data
-        })
-
-    def destroy(self, request, *args, **kwargs):
-
-        ids = request.data.get('ids', [])
-        EmployeeEmergency.objects.filter(id__in=ids).delete()
-
-        return Response({
-            'status': 'success',
-            'message': 'Employee deleted successfully'
-        }, status=status.HTTP_204_NO_CONTENT)
