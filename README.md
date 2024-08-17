@@ -12,4 +12,4 @@ source env/bin/activate
 pip3 install -r requirements.txt
 
 # Run paython server in Local 
-python manage.py runserver 7000
+python manage.py runserver 4000

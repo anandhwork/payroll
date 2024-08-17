@@ -5,10 +5,9 @@ from rest_framework.response import Response
 from rest_framework.exceptions import NotFound
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.filters import OrderingFilter, SearchFilter
-from employee.models.employee import Employee
-from employee.serializers.employee import EmployeeSerializer
-from employee.models.employeeEmergency import EmployeeEmergency
-from employee.serializers.employeeEmergency import EmployeeEmergencySerializer
+from django.contrib.auth.models import User
+from django.contrib.auth.hashers import make_password
+from auth.serializers.UserSerializer import UserSerializer
 
 class CustomPagination(PageNumberPagination):
     page_size = 10  # Default page size
@@ -58,13 +57,13 @@ class CustomPagination(PageNumberPagination):
             "total_pages": self.page.paginator.num_pages if hasattr(self, 'page') else 0
         })
 
-class EmployeeViewSet(viewsets.ModelViewSet):
-    queryset = Employee.objects.all()
-    serializer_class = EmployeeSerializer
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
     pagination_class = CustomPagination
     filter_backends = (SearchFilter, OrderingFilter)
-    search_fields = ['first_name', 'last_name']
-    ordering = ['-employee_id']
+    search_fields = ['username', 'email']
+    ordering = ['-id']
 
     def list(self, request, *args, **kwargs):
 
@@ -85,41 +84,27 @@ class EmployeeViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
 
-        user_id = request.user.id
-
         data = request.data
-        data["created_on"] = '2024-08-11 18:05:14'
-        data["updated_on"] = '2024-08-11 18:05:14'
-        data["created_by"] = user_id
-        data["updated_by"] = user_id
 
-        serializer = self.get_serializer(data=data)
+        if User.objects.filter(username=data["username"]).exists():
+            return Response({
+                    'status': 'success',
+                    'data': "Username already exists"
+                })
+
+        user = User.objects.create_user(
+            username=data['username'],
+            email=data['email'],
+            password=data['password']
+        )
+        serializer = self.get_serializer(user)
+
+        return Response({
+            'status': 'success',
+            'data': serializer.data
+        }, status=status.HTTP_201_CREATED)
         
-        if serializer.is_valid():
-            self.perform_create(serializer)
-            headers = self.get_success_headers(serializer.data)
-            
-            employee_id = serializer.data["employee_id"]
-            emergency_contact = request.data['emergency_contact']
-            
-            for contact in emergency_contact:
-                contact["employee_id"] = employee_id
-                EmergencySerializer = EmployeeEmergencySerializer(data=contact, many=False)
-                if EmergencySerializer.is_valid():
-                    EmergencySerializer.save()
-                else:
-                    print(EmergencySerializer.errors)
-
-            return Response({
-                'status': 'success',
-                'data': serializer.data
-            }, status=status.HTTP_201_CREATED, headers=headers)
-        else:
-            return Response({
-                'status': 'success',
-                'data': serializer.errors
-            })
-
+        
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
         serializer = self.get_serializer(instance)
@@ -135,16 +120,6 @@ class EmployeeViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
 
-        employee_id = serializer.data["employee_id"]
-        emergency_contact = request.data['emergency_contact']
-        
-        for contact in emergency_contact:
-            contact["employee_id"] = employee_id
-            EmergencySerializer = EmployeeEmergencySerializer(data=contact, many=False)
-            if EmergencySerializer.is_valid():
-                EmergencySerializer.save()
-            else:
-                print(EmergencySerializer.errors)
         return Response({
             'status': 'success',
             'data': serializer.data
@@ -155,11 +130,5 @@ class EmployeeViewSet(viewsets.ModelViewSet):
         self.perform_destroy(instance)
         return Response({
             'status': 'success',
-            'message': 'Employee deleted successfully'
+            'message': 'User deleted successfully'
         }, status=status.HTTP_204_NO_CONTENT)
-
-    @action(methods=["GET"], detail=False)
-    def listget(self, request):
-        
-        print("listget")
-        return Response({'listget'})

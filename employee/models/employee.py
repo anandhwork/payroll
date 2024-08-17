@@ -8,10 +8,12 @@ class Employee(models.Model):
     nationality = models.CharField(max_length=255, blank=True, null=True)
     address = models.CharField(max_length=255, blank=True, null=True)
     ni_number = models.CharField(max_length=64, blank=True, null=True)
-    telephone = models.IntegerField(unique=True)
+    telephone = models.IntegerField(default=0)
     email_address = models.CharField(max_length=255, blank=True, null=True)
     status = models.IntegerField(default=0)
+    created_by = models.IntegerField(default=0)
     created_on = models.DateTimeField()
+    updated_by = models.IntegerField(default=0)
     updated_on = models.DateTimeField()
    
     
