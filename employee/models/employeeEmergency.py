@@ -7,7 +7,7 @@ class EmployeeEmergency(models.Model):
     emergency_contact_number = models.IntegerField(default=0)
     emergency_contact_relationship = models.CharField(max_length=255, blank=True, null=True)
     emergency_contact_email_address = models.CharField(max_length=255, blank=True, null=True)
-    emergency_contact_home_address = models.IntegerField(max_length=255, blank=True, null=True)
+    emergency_contact_home_address = models.CharField(max_length=255, blank=True, null=True)
     
     class Meta:
         managed = False

@@ -1,7 +1,9 @@
 from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
+from rest_framework.request import Request
 from rest_framework.response import Response
+from rest_framework.test import APIRequestFactory
 from rest_framework.exceptions import NotFound
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.filters import OrderingFilter, SearchFilter
@@ -9,6 +11,8 @@ from employee.models.employee import Employee
 from employee.serializers.employee import EmployeeSerializer
 from employee.models.employeeEmergency import EmployeeEmergency
 from employee.serializers.employeeEmergency import EmployeeEmergencySerializer
+from employee.models.EmployeeImmigration import EmployeeImmigration
+from employee.views.EmployeeImmigration import EmployeeImmigrationViewSet
 
 class CustomPagination(PageNumberPagination):
     page_size = 10  # Default page size
@@ -110,6 +114,19 @@ class EmployeeViewSet(viewsets.ModelViewSet):
                 else:
                     print(EmergencySerializer.errors)
 
+            immigration_data = request.data['immigration']
+            immigration_data['employee_id'] = employee_id
+                        
+            # Using APIRequestFactory
+            auth_header = request.headers.get('Authorization')
+            token = auth_header.split()[1]
+            factory = APIRequestFactory()
+        
+            t_request = factory.post('/api/immigration/', immigration_data, format='json')
+            t_viewset = EmployeeImmigrationViewSet.as_view({'post': 'create'})
+            t_request.META['HTTP_AUTHORIZATION'] = f'Bearer {token}'
+            immigration_response = t_viewset(t_request)
+
             return Response({
                 'status': 'success',
                 'data': serializer.data
@@ -145,6 +162,30 @@ class EmployeeViewSet(viewsets.ModelViewSet):
                 EmergencySerializer.save()
             else:
                 print(EmergencySerializer.errors)
+
+        immigration_data = request.data['immigration']
+        immigration_data['employee_id'] = employee_id
+        
+        immigration = EmployeeImmigration.objects.filter(employee_id=employee_id).first()
+        
+        # Using APIRequestFactory
+        auth_header = request.headers.get('Authorization')
+        token = auth_header.split()[1]
+        factory = APIRequestFactory()
+        
+        if immigration:
+            employee_immigration_id = immigration.employee_immigration_id
+            t_request = factory.put('/api/immigration/{pk}/', immigration_data, format='json')
+            t_viewset = EmployeeImmigrationViewSet.as_view({'put': 'update'})
+            t_request.META['HTTP_AUTHORIZATION'] = f'Bearer {token}'
+            immigration_response = t_viewset(t_request, pk=employee_immigration_id)
+        else:
+            t_request = factory.post('/api/immigration/', immigration_data, format='json')
+            t_viewset = EmployeeImmigrationViewSet.as_view({'post': 'create'})
+            t_request.META['HTTP_AUTHORIZATION'] = f'Bearer {token}'
+            immigration_response = t_viewset(t_request)
+
+
         return Response({
             'status': 'success',
             'data': serializer.data

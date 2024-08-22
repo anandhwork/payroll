@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework.exceptions import NotFound
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.filters import OrderingFilter, SearchFilter
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.contrib.auth.hashers import make_password
 from auth.serializers.UserSerializer import UserSerializer
 
@@ -98,6 +98,12 @@ class UserViewSet(viewsets.ModelViewSet):
             password=data['password']
         )
         serializer = self.get_serializer(user)
+
+        # # Get or create a group
+        # group, created = Group.objects.get_or_create(name='Employee')
+        # user = User.objects.get(username='john_doe')
+        # # Add the user to the group
+        # user.groups.add(group)
 
         return Response({
             'status': 'success',
