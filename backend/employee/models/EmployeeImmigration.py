@@ -13,6 +13,8 @@ class EmployeeImmigration(models.Model):
     share_code = models.IntegerField(default=0)
     ecs_report = models.IntegerField(default=0)
     reminder_duration = models.IntegerField(default=0)
+    passport_doc = models.FileField(upload_to='documents/')
+    brp_doc = models.FileField(upload_to='documents/')
     
     class Meta:
         managed = False

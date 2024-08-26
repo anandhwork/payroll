@@ -104,28 +104,32 @@ class EmployeeViewSet(viewsets.ModelViewSet):
             headers = self.get_success_headers(serializer.data)
             
             employee_id = serializer.data["employee_id"]
-            emergency_contact = request.data['emergency_contact']
-            
-            for contact in emergency_contact:
-                contact["employee_id"] = employee_id
-                EmergencySerializer = EmployeeEmergencySerializer(data=contact, many=False)
-                if EmergencySerializer.is_valid():
-                    EmergencySerializer.save()
-                else:
-                    print(EmergencySerializer.errors)
 
-            immigration_data = request.data['immigration']
-            immigration_data['employee_id'] = employee_id
-                        
-            # Using APIRequestFactory
-            auth_header = request.headers.get('Authorization')
-            token = auth_header.split()[1]
-            factory = APIRequestFactory()
-        
-            t_request = factory.post('/api/immigration/', immigration_data, format='json')
-            t_viewset = EmployeeImmigrationViewSet.as_view({'post': 'create'})
-            t_request.META['HTTP_AUTHORIZATION'] = f'Bearer {token}'
-            immigration_response = t_viewset(t_request)
+            # User create
+
+            emergency_contact = data.get('emergency_contact')
+            if emergency_contact:
+                for contact in emergency_contact:
+                    contact["employee_id"] = employee_id
+                    EmergencySerializer = EmployeeEmergencySerializer(data=contact, many=False)
+                    if EmergencySerializer.is_valid():
+                        EmergencySerializer.save()
+                    else:
+                        print(EmergencySerializer.errors)
+
+            immigration_data = data.get('immigration')
+            if immigration_data:
+                immigration_data['employee_id'] = employee_id
+                            
+                # Using APIRequestFactory
+                auth_header = request.headers.get('Authorization')
+                token = auth_header.split()[1]
+                factory = APIRequestFactory()
+            
+                t_request = factory.post('/api/immigration/', immigration_data, format='json')
+                t_viewset = EmployeeImmigrationViewSet.as_view({'post': 'create'})
+                t_request.META['HTTP_AUTHORIZATION'] = f'Bearer {token}'
+                immigration_response = t_viewset(t_request)
 
             return Response({
                 'status': 'success',
@@ -164,26 +168,27 @@ class EmployeeViewSet(viewsets.ModelViewSet):
                 print(EmergencySerializer.errors)
 
         immigration_data = request.data['immigration']
-        immigration_data['employee_id'] = employee_id
-        
-        immigration = EmployeeImmigration.objects.filter(employee_id=employee_id).first()
-        
-        # Using APIRequestFactory
-        auth_header = request.headers.get('Authorization')
-        token = auth_header.split()[1]
-        factory = APIRequestFactory()
-        
-        if immigration:
-            employee_immigration_id = immigration.employee_immigration_id
-            t_request = factory.put('/api/immigration/{pk}/', immigration_data, format='json')
-            t_viewset = EmployeeImmigrationViewSet.as_view({'put': 'update'})
-            t_request.META['HTTP_AUTHORIZATION'] = f'Bearer {token}'
-            immigration_response = t_viewset(t_request, pk=employee_immigration_id)
-        else:
-            t_request = factory.post('/api/immigration/', immigration_data, format='json')
-            t_viewset = EmployeeImmigrationViewSet.as_view({'post': 'create'})
-            t_request.META['HTTP_AUTHORIZATION'] = f'Bearer {token}'
-            immigration_response = t_viewset(t_request)
+        if immigration_data:
+            immigration_data['employee_id'] = employee_id
+            
+            immigration = EmployeeImmigration.objects.filter(employee_id=employee_id).first()
+            
+            # Using APIRequestFactory
+            auth_header = request.headers.get('Authorization')
+            token = auth_header.split()[1]
+            factory = APIRequestFactory()
+            
+            if immigration:
+                employee_immigration_id = immigration.employee_immigration_id
+                t_request = factory.put('/api/immigration/{pk}/', immigration_data, format='json')
+                t_viewset = EmployeeImmigrationViewSet.as_view({'put': 'update'})
+                t_request.META['HTTP_AUTHORIZATION'] = f'Bearer {token}'
+                immigration_response = t_viewset(t_request, pk=employee_immigration_id)
+            else:
+                t_request = factory.post('/api/immigration/', immigration_data, format='json')
+                t_viewset = EmployeeImmigrationViewSet.as_view({'post': 'create'})
+                t_request.META['HTTP_AUTHORIZATION'] = f'Bearer {token}'
+                immigration_response = t_viewset(t_request)
 
 
         return Response({

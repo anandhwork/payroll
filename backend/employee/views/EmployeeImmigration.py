@@ -4,6 +4,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.exceptions import NotFound
 from rest_framework.filters import OrderingFilter, SearchFilter
+from rest_framework.parsers import MultiPartParser, FormParser
 from employee.views.Pagination import CustomPagination
 from employee.models.EmployeeImmigration import EmployeeImmigration
 from employee.serializers.EmployeeImmigration import EmployeeImmigrationSerializer
@@ -15,6 +16,7 @@ class EmployeeImmigrationViewSet(viewsets.ModelViewSet):
     filter_backends = (SearchFilter, OrderingFilter)
     search_fields = ['visa_type']
     ordering = ['-employee_immigration_id']
+    parser_classes = (MultiPartParser, FormParser)
 
     def list(self, request, *args, **kwargs):
 
@@ -55,7 +57,7 @@ class EmployeeImmigrationViewSet(viewsets.ModelViewSet):
             }, status=status.HTTP_201_CREATED, headers=headers)
         else:
             return Response({
-                'status': 'success',
+                'status': 'failed',
                 'data': serializer.errors
             })
 
@@ -68,13 +70,18 @@ class EmployeeImmigrationViewSet(viewsets.ModelViewSet):
         })
 
     def update(self, request, *args, **kwargs):
-        print("imm_update")
+        
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        self.perform_update(serializer)
-
+        if serializer.is_valid():
+            self.perform_update(serializer)
+        else:
+            return Response({
+                'status': 'failed',
+                'data': serializer.errors
+            })
+        
         return Response({
             'status': 'success',
             'data': serializer.data
