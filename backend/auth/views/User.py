@@ -9,6 +9,7 @@ from django.contrib.auth.models import User, Group
 from django.contrib.auth.hashers import make_password
 from auth.serializers.UserSerializer import UserSerializer
 
+from employee.helpers.AppHelper import AppHelper
 class CustomPagination(PageNumberPagination):
     page_size = 10  # Default page size
     page_size_query_param = 'page_size'  # Allow clients to set page size
@@ -104,6 +105,17 @@ class UserViewSet(viewsets.ModelViewSet):
         # user = User.objects.get(username='john_doe')
         # # Add the user to the group
         # user.groups.add(group)
+        
+        # Notification Mail
+        try:
+        
+            
+            subject = 'Welcome to Our Service'
+            message = f'Hi {user.username}, thank you for registering at our site.'
+            AppHelper.send_notification_email(user.email, subject, message)
+
+        except Exception as e:
+            print(str(e))
 
         return Response({
             'status': 'success',
