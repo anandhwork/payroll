@@ -10,6 +10,8 @@ from employee.models.EmployeeLeaveType import EmployeeLeaveType
 from employee.serializers.EmployeeLeaveType import EmployeeLeaveTypeSerializer
 from employee.models.EmployeeLeaveRequest import EmployeeLeaveRequest
 from employee.serializers.EmployeeLeaveRequest import EmployeeLeaveRequestSerializer
+from employee.models.EmployeeLeaveRequestHistory import EmployeeLeaveRequestHistory
+from employee.serializers.EmployeeLeaveRequestHistory import EmployeeLeaveRequestHistorySerializer
 
 class EmployeeLeaveViewSet(viewsets.ModelViewSet):
     queryset = EmployeeLeaveRequest.objects.all()
@@ -38,8 +40,8 @@ class EmployeeLeaveViewSet(viewsets.ModelViewSet):
         user_id = request.user.id
 
         data = request.data
-        data["created_on"] = '2024-08-11 18:05:14'
-        data["updated_on"] = '2024-08-11 18:05:14'
+        data["created_on"] = AppHelper.datetime()
+        data["updated_on"] = AppHelper.datetime()
         data["created_by"] = user_id
         data["updated_by"] = user_id
 
@@ -82,8 +84,6 @@ class EmployeeLeaveViewSet(viewsets.ModelViewSet):
             'data': serializer.data
         })
 
-    
-
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
         serializer = self.get_serializer(instance)
@@ -96,9 +96,23 @@ class EmployeeLeaveViewSet(viewsets.ModelViewSet):
         
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+
+        user_id = request.user.id
+
+        data = request.data
+        data["updated_on"] = AppHelper.datetime()
+        data["created_by"] = user_id
+        data["updated_by"] = user_id
+        
+
+        serializer = self.get_serializer(instance, data=data, partial=partial)
         if serializer.is_valid():
             self.perform_update(serializer)
+
+            # Update leave request status from user
+            if "update_type" in data and data["updated_by"] == 2:
+                pass
+
         else:
             return Response({
                 'status': 'failed',

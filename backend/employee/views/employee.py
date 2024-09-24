@@ -13,6 +13,7 @@ from employee.models.employeeEmergency import EmployeeEmergency
 from employee.serializers.employeeEmergency import EmployeeEmergencySerializer
 from employee.models.EmployeeImmigration import EmployeeImmigration
 from employee.views.EmployeeImmigration import EmployeeImmigrationViewSet
+from employee.helpers.AppHelper import AppHelper
 
 class CustomPagination(PageNumberPagination):
     page_size = 10  # Default page size
@@ -92,8 +93,8 @@ class EmployeeViewSet(viewsets.ModelViewSet):
         user_id = request.user.id
 
         data = request.data
-        data["created_on"] = '2024-08-11 18:05:14'
-        data["updated_on"] = '2024-08-11 18:05:14'
+        data["created_on"] = AppHelper.datetime()
+        data["updated_on"] = AppHelper.datetime()
         data["created_by"] = user_id
         data["updated_by"] = user_id
 

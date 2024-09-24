@@ -8,6 +8,7 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from employee.views.Pagination import CustomPagination
 from employee.models.EmployeeImmigration import EmployeeImmigration
 from employee.serializers.EmployeeImmigration import EmployeeImmigrationSerializer
+from employee.helpers.AppHelper import AppHelper
 
 class EmployeeImmigrationViewSet(viewsets.ModelViewSet):
     queryset = EmployeeImmigration.objects.all()
@@ -40,8 +41,8 @@ class EmployeeImmigrationViewSet(viewsets.ModelViewSet):
         user_id = request.user.id
 
         data = request.data
-        data["created_on"] = '2024-08-11 18:05:14'
-        data["updated_on"] = '2024-08-11 18:05:14'
+        data["created_on"] = AppHelper.datetime()
+        data["updated_on"] = AppHelper.datetime()
         data["created_by"] = user_id
         data["updated_by"] = user_id
 
